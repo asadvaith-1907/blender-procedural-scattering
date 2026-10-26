@@ -1,6 +1,9 @@
 # blender-procedural-scattering
 Procedural Script for collision free procedural object scattering using bounding sphere rejection sampling.
 
+<img width="1686" height="958" alt="image" src="https://github.com/user-attachments/assets/155e96a4-1b70-4024-944c-545e5a8278d6" />
+
+
 ## Key Features
 
 * **Collision-Free Generation:** Utilizes **Bounding Sphere Collision Detection** to guarantee zero mesh overlap, regardless of randomized rotations and scaling.
