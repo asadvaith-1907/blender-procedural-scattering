@@ -1,0 +1,211 @@
+
+import bpy
+import math
+import random
+import time
+from mathutils import Vector
+
+
+#CLEAR SCENE
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete(use_global=False)
+
+
+
+#MESH CREATION 
+def add_mesh(
+    mesh_type='Cube',
+    scale=1.0,
+    location=(0.0, 0.0, 0.0),
+    rotation=(0.0, 0.0, 0.0),
+    name=None):
+    
+# Accept either a single scale value or XYZ scale values.
+    if isinstance(scale, (int, float)):
+        scale_tuple = (float(scale),) * 3
+    else:
+        scale_tuple = tuple(scale)
+
+# Normalize the mesh type string.
+    t = mesh_type.lower().strip()
+
+# Create the requested primitive.
+    if t == 'cube':
+        bpy.ops.mesh.primitive_cube_add(location=location, rotation=rotation)
+    elif t == 'plane':
+        bpy.ops.mesh.primitive_plane_add(location=location, rotation=rotation)
+    elif t in ('monkey', 'suzanne'):
+        bpy.ops.mesh.primitive_monkey_add(location=location, rotation=rotation)
+    elif t in ('sphere', 'uv_sphere'):
+        bpy.ops.mesh.primitive_uv_sphere_add(location=location, rotation=rotation)
+    elif t == 'icosphere':
+        bpy.ops.mesh.primitive_ico_sphere_add(location=location, rotation=rotation)
+    elif t == 'cylinder':
+        bpy.ops.mesh.primitive_cylinder_add(location=location, rotation=rotation)
+    elif t == 'cone':
+        bpy.ops.mesh.primitive_cone_add(location=location, rotation=rotation)
+    elif t == 'torus':
+        bpy.ops.mesh.primitive_torus_add(location=location, rotation=rotation)
+    else:
+        print(f"Error: Unknown mesh type '{mesh_type}'.")
+        return None
+
+# Get the newly created object and apply its scale.
+    obj = bpy.context.active_object
+    obj.scale = scale_tuple
+
+    if name:
+        obj.name = name
+
+    return obj
+
+
+
+
+def main():
+
+
+
+    object_type = 'Suzanne'
+    number_of_objects = 300
+    max_attempts_per_cube = 120
+
+# Dimensions of the placement volume.
+    vol_x = 50.0
+    vol_y = 30.0
+    vol_z = 20.0
+
+# Randomization settings.
+    random_seed = time.time_ns()
+    rng = random.Random(random_seed)
+    rot_range = (0.0, 360.0)
+    scale_range = (0.5, 3.5)
+
+    if min(vol_x, vol_y, vol_z) <= 0:
+        raise ValueError("Volume dimensions must be positive.")
+
+    if number_of_objects < 0 or max_attempts_per_cube < 1:
+        raise ValueError(
+            "Object count must be non-negative and "
+            "attempt limit must be at least 1."
+        )
+
+    if scale_range[0] <= 0 or scale_range[1] < scale_range[0]:
+        raise ValueError("Invalid scale range.")
+
+# A dedicated random generator makes results repeatable.
+    rng = random.Random(random_seed)
+
+    print(f"Random Cube Generator V2 | Seed: {random_seed}")
+
+# Store Objects
+
+    spawned_cubes = []
+
+# Each entry contains (center, bounding radius).
+    placed_bounds = []
+
+# Generate objects 
+
+    for _ in range(number_of_objects):
+
+        placed = False
+
+        for _ in range(max_attempts_per_cube):
+
+# Choose a random scale.
+            s = rng.uniform(
+                scale_range[0],
+                scale_range[1])
+
+# Assumes a uniformly scaled default Blender cube.
+            candidate_radius = s * math.sqrt(3)
+
+# Ensure the bounding sphere can fit in the volume.
+            if (
+                2 * candidate_radius > vol_x
+                or 2 * candidate_radius > vol_y
+                or 2 * candidate_radius > vol_z
+            ):
+                continue
+
+# Bounding sphere stays inside the volume.
+            x_pos = rng.uniform(
+                -vol_x / 2 + candidate_radius,
+                 vol_x / 2 - candidate_radius)
+
+            y_pos = rng.uniform(
+                -vol_y / 2 + candidate_radius,
+                 vol_y / 2 - candidate_radius)
+
+            z_pos = rng.uniform(
+                -vol_z / 2 + candidate_radius,
+                 vol_z / 2 - candidate_radius)
+
+            candidate_pos = Vector((x_pos, y_pos, z_pos))
+
+# Check against all previously placed spheres.
+            collision = False
+
+            for prev_pos, prev_radius in placed_bounds:
+
+                distance = (candidate_pos - prev_pos).length
+
+                if distance < candidate_radius + prev_radius:
+                    collision = True
+                    break
+
+# Create the object only if no collision was found.
+            if not collision:
+
+                rot_x = math.radians(
+                    rng.uniform(*rot_range))
+                    
+                rot_y = math.radians(
+                    rng.uniform(*rot_range))
+                    
+                rot_z = math.radians(
+                    rng.uniform(*rot_range))
+                    
+
+                cube_obj = add_mesh(
+                    mesh_type=object_type,
+                    scale=(s, s, s),
+                    location=(x_pos, y_pos, z_pos),
+                    rotation=(rot_x, rot_y, rot_z),
+                    name=f"Cube_{len(spawned_cubes) + 1}")
+                    
+
+                if cube_obj is None:
+                    raise RuntimeError(
+                        f"Could not create mesh type: {object_type}")
+
+                spawned_cubes.append(cube_obj)
+
+                placed_bounds.append(
+                    (candidate_pos, candidate_radius))
+
+                placed = True
+                break
+
+# Stop if we couldn't place this object within the attempt limit.
+        if not placed:
+            print(
+                f"Placement stopped: generated "
+                f"{len(spawned_cubes)} of "
+                f"{number_of_objects} requested objects. "
+                f"Could not find a valid position within "
+                f"{max_attempts_per_cube} attempts.")
+                
+            break
+
+    print(f"Total objects generated: {len(spawned_cubes)}")
+
+    return spawned_cubes
+
+    
+
+
+
+
+cubes_list = main()
