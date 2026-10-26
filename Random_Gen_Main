@@ -201,11 +201,16 @@ def main():
 
     print(f"Total objects generated: {len(spawned_cubes)}")
 
+#Add them into a collection    
+    col = bpy.data.collections.new("Scattered_Objects")
+    bpy.context.scene.collection.children.link(col)
+
+# Place all generated objects into the collection
+    for obj in spawned_cubes:
+        col.objects.link(obj)
+        bpy.context.scene.collection.objects.unlink(obj)
+
     return spawned_cubes
-
-    
-
-
-
+ 
 
 cubes_list = main()
