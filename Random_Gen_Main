@@ -10,6 +10,10 @@ from mathutils import Vector
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
 
+#Remove previous collections
+for col in list(bpy.data.collections):
+    bpy.data.collections.remove(col)
+
 
 
 #MESH CREATION 
