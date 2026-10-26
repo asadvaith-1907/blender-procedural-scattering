@@ -31,3 +31,5 @@ Before spawning, the script checks the Euclidean distance between the candidate 
    vol_x, vol_y, vol_z = 70.0, 50.0, 10.0  # Size of the spawn box
    scale_range = (0.5, 2.5)    # Min and Max scale of objects
 <img width="2047" height="1078" alt="image" src="https://github.com/user-attachments/assets/2039d4ab-c3ec-44a4-afef-a3cc0b5450c3" />
+<img width="1683" height="935" alt="image" src="https://github.com/user-attachments/assets/2574f10f-d85c-48dd-bc96-f6d7a42d2368" />
+
